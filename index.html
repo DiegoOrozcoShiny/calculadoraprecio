@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Cuánto me cuesta y a cuánto lo vendo?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F3F7; --surface:#FFFFFF; --ink:#1F2A44; --muted:#5D6680; --line:#D9DCE6;
+  --berry:#B4235A; --berry-soft:#F8E3EB;
+  --sup:#3E63C9; --sal:#8E44AD; --fix:#D99A12; --com:#7F8AA3; --gain:#0F8A7E;
+  --bad:#C0392B; --bad-soft:#FBE7E4; --ok-soft:#E1F3F0; --warn-soft:#FBF1D9;
+  --input:#F7F8FB; --on-accent:#FFFFFF;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#13172A; --surface:#1C2238; --ink:#EEF0F7; --muted:#A3AAC2; --line:#323A57;
+    --berry:#F0679A; --berry-soft:#3A1F33;
+    --sup:#7C9BF0; --sal:#C08BE0; --fix:#F0BC4B; --com:#8F9AB5; --gain:#3FC8B8;
+    --bad:#FF7A6B; --bad-soft:#3B1F24; --ok-soft:#173332; --warn-soft:#3A3120;
+    --input:#242B45; --on-accent:#13172A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#13172A; --surface:#1C2238; --ink:#EEF0F7; --muted:#A3AAC2; --line:#323A57;
+  --berry:#F0679A; --berry-soft:#3A1F33;
+  --sup:#7C9BF0; --sal:#C08BE0; --fix:#F0BC4B; --com:#8F9AB5; --gain:#3FC8B8;
+  --bad:#FF7A6B; --bad-soft:#3B1F24; --ok-soft:#173332; --warn-soft:#3A3120;
+  --input:#242B45; --on-accent:#13172A;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1200px;margin:0 auto;padding:32px 20px 64px}
+header{max-width:780px;margin-bottom:26px}
+h1{font-size:clamp(2.1rem,5vw,3.6rem);line-height:1.02;font-weight:800;letter-spacing:-0.02em;margin:0 0 14px}
+header p{color:var(--muted);margin:0;font-size:1.08rem;max-width:64ch}
+
+.mode{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 28px}
+.mode button{font:inherit;font-weight:700;border:0;background:transparent;color:var(--ink);padding:10px 22px;border-radius:999px;cursor:pointer;min-height:44px}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,430px);gap:32px;align-items:start}
+@media (max-width:960px){.grid{grid-template-columns:1fr}}
+
+.step{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:18px}
+.step-head{display:flex;gap:14px;align-items:baseline;margin-bottom:6px}
+.num{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-size:.95rem;transform:translateY(4px)}
+h2{font-size:1.35rem;margin:0;font-weight:700;letter-spacing:-0.01em}
+h3{font-size:1.02rem;margin:20px 0 8px;font-weight:700}
+.help{color:var(--muted);margin:0 0 16px 48px;font-size:.95rem;max-width:62ch}
+.step .help strong{color:var(--ink)}
+@media (max-width:560px){.help{margin-left:0}}
+
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;gap:8px;align-items:center}
+.row.c2{grid-template-columns:minmax(0,1fr) 150px 40px}
+.row.c4{grid-template-columns:minmax(0,1.3fr) 120px 100px 110px 40px}
+.colhead{display:grid;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:4px}
+.colhead.c4{grid-template-columns:minmax(0,1.3fr) 120px 100px 110px 40px}
+.calc-out{text-align:right;font-weight:700;padding-right:4px}
+@media (max-width:620px){
+  .row.c4{grid-template-columns:1fr 1fr 1fr 40px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .row.c4 > .name{grid-column:1/-1}
+  .colhead.c4{display:none}
+  .row.c4 .money::after,.row.c4 .unitlbl{display:block}
+}
+.unitlbl{display:none;font-size:.75rem;color:var(--muted);margin-top:2px}
+.money{position:relative}
+.money > span{position:absolute;left:12px;top:22px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.money input{padding-left:26px;text-align:right}
+input[type=text],input[type=number]{width:100%;font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+input[type=number]{text-align:right}
+input:focus-visible,button:focus-visible{outline:3px solid var(--berry);outline-offset:2px}
+.del{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:10px;font-size:1.3rem;cursor:pointer;min-height:44px;width:40px}
+.del:hover{color:var(--bad);border-color:var(--bad)}
+.add{margin-top:10px;background:transparent;border:1px dashed var(--line);color:var(--ink);font:inherit;font-weight:500;padding:9px 14px;border-radius:10px;cursor:pointer;min-height:40px}
+.add:hover{border-color:var(--ink)}
+.subtotal{display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-weight:700}
+
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+label.field{display:block;font-weight:500;font-size:.95rem}
+label.field small{display:block;color:var(--muted);font-weight:400;margin-bottom:6px;min-height:2.6em}
+.suffix{position:relative}
+.suffix input{padding-right:46px}
+.suffix > span{position:absolute;right:12px;top:22px;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:.9rem}
+.derived{margin-top:16px;padding:14px 16px;border-radius:12px;background:var(--input);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.derived b{display:block;font-size:1.25rem;font-weight:800}
+.derived span{font-size:.85rem;color:var(--muted)}
+
+.q{margin-bottom:18px}
+.q p{margin:0 0 8px;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--input);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;min-height:42px;text-align:left}
+.chip[aria-pressed="true"]{background:var(--berry);border-color:var(--berry);color:var(--on-accent)}
+.mbreak{margin-top:8px;border-top:1px solid var(--line);padding-top:14px}
+.mline{display:grid;grid-template-columns:52px 1fr;gap:12px;padding:8px 0}
+.mline b{font-size:1.2rem;text-align:right}
+.mline span{color:var(--muted);font-size:.93rem}
+.mline span strong{color:var(--ink);display:block}
+.mtotal{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);margin-top:6px;padding-top:12px}
+.mtotal b{font-size:2rem;font-weight:800;color:var(--berry)}
+
+.receipt{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+@media (max-width:960px){.receipt{position:static}}
+.price-block{padding:26px 24px 20px;background:var(--berry-soft)}
+.price-label{font-weight:500;color:var(--muted);margin:0}
+.price{font-size:clamp(2.6rem,7vw,3.6rem);font-weight:800;line-height:1;letter-spacing:-0.03em;margin:6px 0 4px;color:var(--berry)}
+.price-sub{color:var(--muted);margin:0;font-size:.95rem}
+.bar{display:flex;height:16px;border-radius:999px;overflow:hidden;margin:18px 0 10px;background:var(--line)}
+.bar div{transition:width .35s ease}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.lines{padding:16px 24px 6px}
+.line{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
+.line.total{border-top:2px solid var(--ink);margin-top:4px;padding-top:10px;font-weight:700}
+.line .k{color:var(--muted)}
+.line.total .k{color:var(--ink)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.kpi{background:var(--surface);padding:14px 18px}
+.kpi b{display:block;font-size:1.25rem;font-weight:800}
+.kpi span{font-size:.85rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.bar div{transition:none}}
+
+.reading{margin-top:28px}
+.reading > h2{margin-bottom:14px;font-size:1.6rem}
+.insight{border-left:5px solid var(--gain);background:var(--ok-soft);border-radius:4px 14px 14px 4px;padding:14px 18px;margin-bottom:10px;max-width:80ch}
+.insight.bad{border-color:var(--bad);background:var(--bad-soft)}
+.insight.warn{border-color:var(--fix);background:var(--warn-soft)}
+.insight strong{display:block;margin-bottom:2px}
+.empty{color:var(--muted);font-style:italic}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.tools button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;border-radius:10px;cursor:pointer;min-height:44px}
+.tools button:hover{border-color:var(--ink)}
+footer{color:var(--muted);font-size:.85rem;margin-top:40px;max-width:72ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>¿Cuánto me cuesta y a cuánto lo vendo?</h1>
+    <p>Llena cada paso con los números de un mes normal. Al final sabrás cuánto te cuesta de verdad cada <span class="u1">servicio</span>, incluido tu tiempo, y a qué precio venderlo para que tu negocio gane.</p>
+  </header>
+
+  <div class="mode" role="group" aria-label="¿Qué vendes?">
+    <button type="button" data-mode="servicio">Vendo servicios</button>
+    <button type="button" data-mode="producto">Vendo productos</button>
+  </div>
+
+  <div class="grid">
+    <main>
+      <!-- 1 -->
+      <section class="step" aria-labelledby="h1s">
+        <div class="step-head"><div class="num" aria-hidden="true">1</div><h2 id="h1s">Tu sueldo y tu tiempo</h2></div>
+        <p class="help">Tu trabajo es el costo que más se olvida. Si no lo cobras, cada <span class="u1">servicio</span> te sale gratis a ti y no a tu clienta. <strong>Pon el sueldo que le pagarías a otra persona por hacer tu trabajo</strong>, y como mínimo lo que necesitas para vivir.</p>
+        <div class="fields">
+          <label class="field">Tu sueldo mensual<small>Lo que quieres llevarte cada mes</small>
+            <div class="money"><span>$</span><input type="number" id="salary" min="0" step="100" inputmode="decimal"></div></label>
+          <label class="field">Días que trabajas<small>Por semana</small>
+            <div class="suffix"><input type="number" id="days" min="1" max="7" step="1" inputmode="numeric"><span>días</span></div></label>
+          <label class="field">Horas al día<small>Todas: atender, redes, compras, cobrar</small>
+            <div class="suffix"><input type="number" id="hours" min="1" max="16" step="0.5" inputmode="decimal"><span>h</span></div></label>
+          <label class="field"><span class="lblMin">Minutos por servicio</span><small class="hintMin">Incluye recibir, preparar, atender, limpiar y cobrar</small>
+            <div class="suffix"><input type="number" id="minutes" min="1" step="5" inputmode="numeric"><span>min</span></div></label>
+          <label class="field">Tiempo productivo<small>% del día que de verdad <span class="v1">atiendes</span>. El resto se va en tareas de la operación</small>
+            <div class="suffix"><input type="number" id="pct" min="10" max="100" step="5" inputmode="numeric"><span>%</span></div></label>
+          <label class="field">Personas que <span class="v1">atienden</span><small>Tú más quienes hagan lo mismo que tú</small>
+            <div class="suffix"><input type="number" id="people" min="1" step="1" inputmode="numeric"><span>pers.</span></div></label>
+        </div>
+        <div class="derived" aria-live="polite">
+          <div><b id="dHour">$0</b><span>Vale tu hora de trabajo</span></div>
+          <div><b id="dHours">0 h</b><span>Trabajas al mes</span></div>
+          <div><b id="dCap">0</b><span class="capLbl">Servicios que caben en tu mes</span></div>
+        </div>
+      </section>
+
+      <!-- 2 -->
+      <section class="step" aria-labelledby="h2s">
+        <div class="step-head"><div class="num" aria-hidden="true">2</div><h2 id="h2s">Insumos de cada <span class="u1">servicio</span></h2></div>
+        <p class="help">Lo que se gasta cada vez que <span class="v2">das un servicio</span>. Pon lo que pagas por el producto y para cuántos <span class="u2">servicios</span> te alcanza. Ejemplo: un pegamento de $450 que rinde 30 <span class="u2">servicios</span> son $15 por <span class="u1">servicio</span>. Incluye desechables, guantes, toallas, empaques y etiquetas.</p>
+        <div class="colhead c4" aria-hidden="true"><span>Insumo</span><span>Precio de compra</span><span>Rinde para</span><span style="text-align:right">Por <span class="u1">servicio</span></span><span></span></div>
+        <div class="rows" id="supRows"></div>
+        <button class="add" type="button" data-add="supplies">+ Agregar insumo</button>
+        <div class="fields" style="margin-top:16px">
+          <label class="field">Merma o desperdicio<small>Lo que se tira, se echa a perder o se usa de más</small>
+            <div class="suffix"><input type="number" id="merma" min="0" max="50" step="1" inputmode="numeric"><span>%</span></div></label>
+        </div>
+        <div class="subtotal"><span>Insumos por <span class="u1">servicio</span> (con merma)</span><span id="supTotal">$0</span></div>
+      </section>
+
+      <!-- 3 -->
+      <section class="step" aria-labelledby="h3s">
+        <div class="step-head"><div class="num" aria-hidden="true">3</div><h2 id="h3s">Gastos fijos del mes</h2></div>
+        <p class="help">Lo que pagas aunque no tengas clientas. Revisa la lista completa: si algo no aplica, déjalo en blanco. <strong>Si pagas algo cada año, divídelo entre 12.</strong> Si trabajas en casa, pon la parte de la renta, luz e internet que usa tu negocio.</p>
+        <div id="fixedGroups"></div>
+        <div class="subtotal"><span>Total gastos fijos (sin tu sueldo)</span><span id="fixTotal">$0</span></div>
+      </section>
+
+      <!-- 4 -->
+      <section class="step" aria-labelledby="h4s">
+        <div class="step-head"><div class="num" aria-hidden="true">4</div><h2 id="h4s">Equipo y herramientas</h2></div>
+        <p class="help">Tu equipo se desgasta y algún día lo vas a reponer. Ese dinero debe salir de tus precios. Pon lo que costó y cuántos meses te dura: una camilla de $12,000 que dura 5 años (60 meses) son $200 al mes.</p>
+        <div class="colhead c4" aria-hidden="true"><span>Equipo</span><span>Lo que costó</span><span>Meses que dura</span><span style="text-align:right">Al mes</span><span></span></div>
+        <div class="rows" id="eqRows"></div>
+        <button class="add" type="button" data-add="equip">+ Agregar equipo</button>
+        <div class="subtotal"><span>Desgaste de equipo al mes</span><span id="eqTotal">$0</span></div>
+      </section>
+
+      <!-- 5 -->
+      <section class="step" aria-labelledby="h5s">
+        <div class="step-head"><div class="num" aria-hidden="true">5</div><h2 id="h5s">Cuánto vendes y cómo cobras</h2></div>
+        <p class="help">Con estos datos repartimos tus gastos entre lo que de verdad vendes y comparamos con el mercado.</p>
+        <div class="fields">
+          <label class="field"><span class="lblQ">Servicios que das al mes</span><small>Un mes normal, no el mejor</small>
+            <input type="number" id="q" min="0" step="1" inputmode="numeric"></label>
+          <label class="field">Comisión por cobro<small>Terminal, link de pago o app. Si todo es efectivo, pon 0</small>
+            <div class="suffix"><input type="number" id="comm" min="0" max="40" step="0.1" inputmode="decimal"><span>%</span></div></label>
+          <label class="field">Tu precio actual<small>Opcional, para comparar</small>
+            <div class="money"><span>$</span><input type="number" id="current" min="0" step="1" inputmode="decimal" placeholder="0"></div></label>
+          <label class="field">Precio de la competencia<small>Opcional, el promedio de 3 negocios parecidos</small>
+            <div class="money"><span>$</span><input type="number" id="comp" min="0" step="1" inputmode="decimal" placeholder="0"></div></label>
+        </div>
+      </section>
+
+      <!-- 6 -->
+      <section class="step" aria-labelledby="h6s">
+        <div class="step-head"><div class="num" aria-hidden="true">6</div><h2 id="h6s">Tu margen de ganancia</h2></div>
+        <p class="help">Tu sueldo ya está en el costo. La ganancia es otra cosa: es lo que el <strong>negocio</strong> necesita para sobrevivir meses malos, reponerse y crecer. Responde 4 preguntas y armamos tu porcentaje pieza por pieza.</p>
+        <div id="questions"></div>
+        <div class="mbreak">
+          <div class="mline"><b>10%</b><span><strong>Ganancia base</strong>Lo mínimo que todo negocio debe dejar por el riesgo de emprender. Nunca vendas con menos.</span></div>
+          <div id="mlines"></div>
+          <div class="mtotal"><span style="font-weight:700">Tu margen recomendado</span><b id="mTotal">0%</b></div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="receipt" aria-live="polite" aria-labelledby="hrec">
+      <div class="price-block">
+        <p class="price-label" id="hrec">Precio sugerido por <span class="u1">servicio</span>, antes de impuestos</p>
+        <p class="price" id="price">$0</p>
+        <p class="price-sub" id="priceIva">Con IVA (16%): $0</p>
+        <div class="bar" aria-hidden="true">
+          <div id="bSup" style="background:var(--sup);width:0"></div>
+          <div id="bSal" style="background:var(--sal);width:0"></div>
+          <div id="bFix" style="background:var(--fix);width:0"></div>
+          <div id="bCom" style="background:var(--com);width:0"></div>
+          <div id="bGain" style="background:var(--gain);width:0"></div>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--sup)"></i>Insumos</span>
+          <span><i style="background:var(--sal)"></i>Tu sueldo</span>
+          <span><i style="background:var(--fix)"></i>Gastos y equipo</span>
+          <span><i style="background:var(--com)"></i>Comisión</span>
+          <span><i style="background:var(--gain)"></i>Ganancia</span>
+        </div>
+      </div>
+      <div class="lines">
+        <div class="line"><span class="k">Insumos</span><span id="rSup">$0</span></div>
+        <div class="line"><span class="k">Tu sueldo</span><span id="rSal">$0</span></div>
+        <div class="line"><span class="k">Gastos fijos y equipo</span><span id="rFix">$0</span></div>
+        <div class="line total"><span class="k">Costo real por <span class="u1">servicio</span></span><span id="rCost">$0</span></div>
+        <div class="line"><span class="k" id="rGainK">Ganancia del negocio</span><span id="rGain">$0</span></div>
+        <div class="line"><span class="k" id="rComK">Comisión de cobro</span><span id="rCom">$0</span></div>
+        <div class="line total"><span class="k">Precio de venta</span><span id="rPrice">$0</span></div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><b id="kMonthly">$0</b><span>Ganancia del negocio al mes, aparte de tu sueldo</span></div>
+        <div class="kpi"><b id="kBe">0</b><span class="beLbl">Servicios al mes para no perder</span></div>
+        <div class="kpi"><b id="kUtil">0%</b><span>De tu capacidad ocupada</span></div>
+        <div class="kpi"><b id="kFull">$0</b><span>Precio si llenas tu capacidad</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="reading" aria-labelledby="hread">
+    <h2 id="hread">Lo que te dicen tus números</h2>
+    <div id="insights"><p class="empty">Llena los pasos para ver tu diagnóstico.</p></div>
+    <div class="tools">
+      <button type="button" id="example">Cargar ejemplo</button>
+      <button type="button" id="reset">Borrar todo y empezar</button>
+    </div>
+  </section>
+
+  <footer>Los cálculos son una guía para decidir tu precio y no sustituyen la asesoría contable o fiscal. El precio sugerido es antes de impuestos. Tus datos se guardan solo en este navegador.</footer>
+</div>
+
+<script>
+(function(){
+  const KEY='calc-precio-v2';
+  const fmt=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2});
+  const fmt0=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0});
+  const nfmt=new Intl.NumberFormat('es-MX',{maximumFractionDigits:0});
+  const $=id=>document.getElementById(id);
+  const num=v=>{const x=parseFloat(v);return isFinite(x)?x:0;};
+  const clone=o=>JSON.parse(JSON.stringify(o));
+
+  const WORDS={
+    servicio:{u1:'servicio',u2:'servicios',v1:'atiendes',v1b:'atienden',v2:'das un servicio',lblMin:'Minutos por servicio',hintMin:'Incluye recibir, preparar, atender, limpiar y cobrar',lblQ:'Servicios que das al mes',cap:'Servicios que caben en tu mes',be:'Servicios al mes para no perder'},
+    producto:{u1:'pieza',u2:'piezas',v1:'produces',v1b:'producen',v2:'haces una pieza',lblMin:'Minutos por pieza',hintMin:'Desde que preparas hasta que empacas, dividido entre las piezas de cada tanda',lblQ:'Piezas que vendes al mes',cap:'Piezas que caben en tu mes',be:'Piezas al mes para no perder'}
+  };
+
+  const QUESTIONS=[
+    {id:'var',title:'Fondo para meses flojos',q:'¿Qué tan parecidas son tus ventas de un mes a otro?',opts:[['Casi iguales',3],['Cambian algo',6],['Cambian mucho o tengo temporadas',10]],why:'Guarda dinero en meses buenos para pagar gastos en los malos.'},
+    {id:'cancel',title:'Cancelaciones, devoluciones y fiado',q:'¿Te pasa que te cancelen, no lleguen, te devuelvan o no te paguen?',opts:[['Casi nunca',0],['A veces',3],['Seguido',6]],why:'Cubre lo que pierdes cuando una venta no se concreta o no se cobra.'},
+    {id:'grow',title:'Reinversión y crecimiento',q:'¿Qué quieres para tu negocio en el próximo año?',opts:[['Mantenerme igual',5],['Crecer poco a poco',8],['Crecer fuerte: equipo, local o personal',12]],why:'El dinero para crecer sale de la ganancia, no de tu sueldo ni de un préstamo.'},
+    {id:'diff',title:'Valor que te distingue',q:'Frente a tu competencia, tú…',opts:[['Ofrezco lo mismo que otros',5],['Tengo algo que me distingue',10],['Soy especialista, certificada o premium',15]],why:'Lo que te hace distinta se cobra. Si eres igual a todos, el mercado limita tu precio.'}
+  ];
+
+  const FIXED_TEMPLATE=[
+    {g:'Tu espacio',items:['Renta (o la parte de tu casa que usa el negocio)','Luz','Agua','Gas','Internet y teléfono','Limpieza y mantenimiento']},
+    {g:'Personas que te ayudan',items:['Sueldos de ayudantes o empleadas','IMSS y prestaciones']},
+    {g:'Operación y ventas',items:['Publicidad y redes sociales','Agenda, software o apps','Contador','Transporte y gasolina','Papelería, uniformes y blancos','Comisión fija mensual de terminal']},
+    {g:'Formación, permisos y seguros',items:['Cursos y certificaciones (al mes)','Permisos y licencias','Seguros']}
+  ];
+  function blankFixed(){return FIXED_TEMPLATE.map(g=>({g:g.g,items:g.items.map(n=>({n,a:''}))}));}
+  function fixedWith(vals){const f=blankFixed();f.forEach(g=>g.items.forEach(it=>{if(vals[it.n]!==undefined)it.a=vals[it.n];}));return f;}
+
+  const EXAMPLES={
+    servicio:{mode:'servicio',salary:12000,days:5,hours:8,minutes:120,pct:70,people:1,q:50,comm:3.5,current:500,comp:650,merma:5,
+      supplies:[{n:'Pestañas (bandeja)',p:250,r:5},{n:'Pegamento',p:450,r:30},{n:'Parches y cintas',p:150,r:25},{n:'Microcepillos y desechables',p:120,r:30},{n:'Primer y removedor',p:300,r:40}],
+      equip:[{n:'Cama de pestañas',p:4500,m:36},{n:'Lámpara',p:2500,m:36},{n:'Pinzas y herramientas',p:1800,m:12}],
+      fixed:fixedWith({'Renta (o la parte de tu casa que usa el negocio)':4000,'Luz':400,'Agua':150,'Internet y teléfono':500,'Limpieza y mantenimiento':300,'Publicidad y redes sociales':1500,'Agenda, software o apps':300,'Contador':800,'Papelería, uniformes y blancos':250,'Cursos y certificaciones (al mes)':500,'Permisos y licencias':100}),
+      ans:{var:6,cancel:3,grow:8,diff:10}},
+    producto:{mode:'producto',salary:10000,days:6,hours:8,minutes:40,pct:70,people:1,q:150,comm:3.5,current:85,comp:110,merma:8,
+      supplies:[{n:'Harina, azúcar y huevo',p:900,r:40},{n:'Mantequilla y lácteos',p:700,r:30},{n:'Chocolate y rellenos',p:600,r:25},{n:'Caja y etiqueta',p:300,r:50}],
+      equip:[{n:'Horno',p:15000,m:60},{n:'Batidora',p:6000,m:48},{n:'Moldes y utensilios',p:2000,m:24}],
+      fixed:fixedWith({'Renta (o la parte de tu casa que usa el negocio)':2000,'Luz':500,'Gas':600,'Agua':150,'Internet y teléfono':400,'Publicidad y redes sociales':1200,'Transporte y gasolina':800,'Contador':600,'Permisos y licencias':100}),
+      ans:{var:6,cancel:3,grow:8,diff:5}}
+  };
+  const BLANK={
+    servicio:{supplies:[{n:'Producto principal',p:'',r:''},{n:'Desechables',p:'',r:''}],equip:[{n:'Equipo principal',p:'',m:''}]},
+    producto:{supplies:[{n:'Materia prima principal',p:'',r:''},{n:'Empaque y etiqueta',p:'',r:''}],equip:[{n:'Equipo principal',p:'',m:''}]}
+  };
+  function blankState(mode){return Object.assign({mode,salary:'',days:5,hours:8,minutes:'',pct:70,people:1,q:'',comm:0,current:'',comp:'',merma:5,fixed:blankFixed(),ans:{var:6,cancel:3,grow:8,diff:5}},clone(BLANK[mode]));}
+
+  let S;
+  try{const s=localStorage.getItem(KEY);S=s?JSON.parse(s):null;}catch(e){S=null;}
+  if(!S||!S.fixed) S=clone(EXAMPLES.servicio);
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+  function applyWords(){
+    const w=WORDS[S.mode];
+    document.querySelectorAll('.u1').forEach(e=>e.textContent=w.u1);
+    document.querySelectorAll('.u2').forEach(e=>e.textContent=w.u2);
+    document.querySelectorAll('.v1').forEach((e,i)=>e.textContent=i===0?w.v1:w.v1b);
+    document.querySelectorAll('.v2').forEach(e=>e.textContent=w.v2);
+    document.querySelector('.lblMin').textContent=w.lblMin;
+    document.querySelector('.hintMin').textContent=w.hintMin;
+    document.querySelector('.lblQ').textContent=w.lblQ;
+    document.querySelector('.capLbl').textContent=w.cap;
+    document.querySelector('.beLbl').textContent=w.be;
+    document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===S.mode)));
+  }
+
+  function row4(list,i,k2,k3,lbl2,lbl3,out,rerender){
+    const r=list[i];const d=document.createElement('div');d.className='row c4';
+    d.innerHTML='<input class="name" type="text" aria-label="Concepto" placeholder="Concepto">'+
+      '<div class="money"><span>$</span><input type="number" min="0" step="1" inputmode="decimal" aria-label="'+lbl2+'" placeholder="0"><span class="unitlbl">'+lbl2+'</span></div>'+
+      '<div><input type="number" min="0" step="1" inputmode="numeric" aria-label="'+lbl3+'" placeholder="0"><span class="unitlbl">'+lbl3+'</span></div>'+
+      '<div class="calc-out"></div><button class="del" type="button" aria-label="Quitar">×</button>';
+    const [t,a,b]=d.querySelectorAll('input');const o=d.querySelector('.calc-out');
+    t.value=r.n;a.value=r[k2];b.value=r[k3];
+    const upd=()=>{o.textContent=fmt.format(out(r));};
+    t.addEventListener('input',()=>{r.n=t.value;save();});
+    a.addEventListener('input',()=>{r[k2]=a.value;upd();calc();});
+    b.addEventListener('input',()=>{r[k3]=b.value;upd();calc();});
+    d.querySelector('.del').addEventListener('click',()=>{list.splice(i,1);rerender();calc();});
+    upd();return d;
+  }
+  const perUnit=r=>num(r.r)>0?num(r.p)/num(r.r):0;
+  const perMonth=r=>num(r.m)>0?num(r.p)/num(r.m):0;
+  function renderSupplies(){const box=$('supRows');box.innerHTML='';S.supplies.forEach((_,i)=>box.appendChild(row4(S.supplies,i,'p','r','Precio de compra','Rinde para',perUnit,renderSupplies)));}
+  function renderEquip(){const box=$('eqRows');box.innerHTML='';S.equip.forEach((_,i)=>box.appendChild(row4(S.equip,i,'p','m','Lo que costó','Meses que dura',perMonth,renderEquip)));}
+
+  function renderFixed(){
+    const box=$('fixedGroups');box.innerHTML='';
+    S.fixed.forEach(g=>{
+      const h=document.createElement('h3');h.textContent=g.g;box.appendChild(h);
+      const rows=document.createElement('div');rows.className='rows';
+      const draw=()=>{rows.innerHTML='';g.items.forEach((it,i)=>{
+        const d=document.createElement('div');d.className='row c2';
+        d.innerHTML='<input type="text" aria-label="Concepto" placeholder="Concepto"><div class="money"><span>$</span><input type="number" min="0" step="1" inputmode="decimal" aria-label="Monto al mes" placeholder="0"></div><button class="del" type="button" aria-label="Quitar">×</button>';
+        const [t,a]=d.querySelectorAll('input');t.value=it.n;a.value=it.a;
+        t.addEventListener('input',()=>{it.n=t.value;save();});
+        a.addEventListener('input',()=>{it.a=a.value;calc();});
+        d.querySelector('.del').addEventListener('click',()=>{g.items.splice(i,1);draw();calc();});
+        rows.appendChild(d);});};
+      draw();box.appendChild(rows);
+      const add=document.createElement('button');add.className='add';add.type='button';add.textContent='+ Agregar en '+g.g.toLowerCase();
+      add.addEventListener('click',()=>{g.items.push({n:'',a:''});draw();rows.lastElementChild.querySelector('input').focus();});
+      box.appendChild(add);
+    });
+  }
+
+  function renderQuestions(){
+    const box=$('questions');box.innerHTML='';
+    QUESTIONS.forEach(q=>{
+      const d=document.createElement('div');d.className='q';
+      d.innerHTML='<p>'+q.q+'</p><div class="chips" role="group" aria-label="'+q.q+'"></div>';
+      const c=d.querySelector('.chips');
+      q.opts.forEach(([t,v])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
+        b.setAttribute('aria-pressed',String(S.ans[q.id]===v));
+        b.addEventListener('click',()=>{S.ans[q.id]=v;renderQuestions();calc();});c.appendChild(b);});
+      box.appendChild(d);
+    });
+  }
+
+  const FIELDS=['salary','days','hours','minutes','pct','people','q','comm','current','comp','merma'];
+  function renderAll(){
+    applyWords();renderSupplies();renderEquip();renderFixed();renderQuestions();
+    FIELDS.forEach(f=>{$(f).value=S[f];});calc();
+  }
+  FIELDS.forEach(f=>$(f).addEventListener('input',e=>{S[f]=e.target.value;calc();}));
+
+  function ins(cls,t,x){return '<div class="insight '+cls+'"><strong>'+t+'</strong>'+x+'</div>';}
+
+  function calc(){
+    const w=WORDS[S.mode];
+    const salary=num(S.salary),days=num(S.days),hours=num(S.hours),minutes=num(S.minutes),pct=Math.min(num(S.pct),100)/100,people=Math.max(num(S.people),1);
+    const hoursMonth=days*hours*4.33, prodHours=hoursMonth*pct;
+    const cap=minutes>0?Math.floor(people*prodHours*60/minutes):0;
+    const hourVal=hoursMonth>0?salary/hoursMonth:0;
+    $('dHour').textContent=fmt0.format(hourVal);$('dHours').textContent=nfmt.format(hoursMonth)+' h';$('dCap').textContent=nfmt.format(cap);
+
+    const merma=num(S.merma)/100;
+    const supU=S.supplies.reduce((s,r)=>s+perUnit(r),0)*(1+merma);
+    const eqM=S.equip.reduce((s,r)=>s+perMonth(r),0);
+    const fixM=S.fixed.reduce((s,g)=>s+g.items.reduce((t,i)=>t+num(i.a),0),0);
+    $('supTotal').textContent=fmt.format(supU);$('eqTotal').textContent=fmt.format(eqM);$('fixTotal').textContent=fmt.format(fixM);
+
+    let mPct=10;let ml='';
+    QUESTIONS.forEach(q=>{const v=S.ans[q.id]||0;mPct+=v;ml+='<div class="mline"><b>'+v+'%</b><span><strong>'+q.title+'</strong>'+q.why+'</span></div>';});
+    $('mlines').innerHTML=ml;$('mTotal').textContent=mPct+'%';
+    $('rGainK').textContent='Ganancia del negocio ('+mPct+'%)';
+    save();
+
+    const q=num(S.q), c=num(S.comm)/100, m=mPct/100;
+    const zero=()=>{['price','rSup','rSal','rFix','rCost','rGain','rCom','rPrice','kMonthly','kFull'].forEach(id=>$(id).textContent='$0');
+      $('priceIva').textContent='Con IVA (16%): $0';$('kBe').textContent='0';$('kUtil').textContent='0%';
+      ['bSup','bSal','bFix','bCom','bGain'].forEach(id=>$(id).style.width='0');};
+    if(q<=0||(salary+fixM+eqM+supU)<=0||m+c>=0.9){zero();
+      $('insights').innerHTML='<p class="empty">'+(m+c>=0.9?'La comisión de cobro es demasiado alta para calcular un precio. Revísala.':'Llena tu sueldo, tus insumos, tus gastos y cuántos '+w.u2+' vendes al mes para ver tu diagnóstico.')+'</p>';return;}
+
+    $('rComK').textContent='Comisión de cobro ('+(c*100).toLocaleString('es-MX')+'%)';
+    const otherF=fixM+eqM, F=salary+otherF;
+    const salU=salary/q, fixU=otherF/q, cu=supU+salU+fixU;
+    const price=cu/(1-m-c), gainU=price*m, comU=price*c;
+    const be=(price*(1-c)-supU)>0?Math.ceil(F/(price*(1-c)-supU)):Infinity;
+    const util=cap>0?q/cap:0;
+    const cuFull=cap>0?supU+F/cap:cu, priceFull=cuFull/(1-m-c);
+
+    $('price').textContent=fmt.format(price);$('rPrice').textContent=fmt.format(price);
+    $('priceIva').textContent='Con IVA (16%): '+fmt.format(price*1.16);
+    $('rSup').textContent=fmt.format(supU);$('rSal').textContent=fmt.format(salU);$('rFix').textContent=fmt.format(fixU);
+    $('rCost').textContent=fmt.format(cu);$('rGain').textContent=fmt.format(gainU);$('rCom').textContent=fmt.format(comU);
+    $('kMonthly').textContent=fmt0.format(gainU*q);$('kBe').textContent=isFinite(be)?nfmt.format(be):'—';
+    $('kUtil').textContent=cap>0?Math.round(util*100)+'%':'—';$('kFull').textContent=cap>0?fmt.format(priceFull):'—';
+    [['bSup',supU],['bSal',salU],['bFix',fixU],['bCom',comU],['bGain',gainU]].forEach(([id,v])=>$(id).style.width=(v/price*100)+'%');
+
+    let h='';
+    const p0=num(S.current), comp=num(S.comp);
+    // Sueldo
+    if(salary>0){
+      h+=ins('','Tu trabajo vale '+fmt0.format(hourVal)+' por hora','En cada '+w.u1+' van '+fmt.format(salU)+' de tu sueldo, el '+Math.round(salU/cu*100)+'% de tu costo. Si solo contaras insumos y gastos, creerías que te cuesta '+fmt.format(supU+fixU)+' y no '+fmt.format(cu)+'. Esa diferencia es la que muchas emprendedoras regalan sin darse cuenta.');
+    }else{
+      h+=ins('bad','No pusiste tu sueldo','Tu precio está calculado como si trabajaras gratis. Pon en el paso 1 lo que le pagarías a otra persona por hacer tu trabajo.');
+    }
+    // Precio actual
+    if(p0>0){
+      const net=p0*(1-c);
+      if(net<supU) h+=ins('bad','Cada venta te hace perder dinero','A '+fmt.format(p0)+' ni siquiera recuperas los insumos ('+fmt.format(supU)+' más comisión). Vender más solo agranda la pérdida.');
+      else if(net<cu){
+        const gap=(cu-net)*q;
+        h+=ins('bad','Con tu precio actual no alcanzas a pagarte','Vendes a '+fmt.format(p0)+' y cada '+w.u1+' te cuesta '+fmt.format(cu)+'. Al mes te faltan '+fmt0.format(gap)+', que normalmente salen de tu sueldo: en realidad te estás pagando '+fmt0.format(Math.max(salary-gap,0))+' en vez de '+fmt0.format(salary)+'.');
+      }else if(p0<price){
+        h+=ins('warn','Te pagas, pero tu negocio casi no gana','Con '+fmt.format(p0)+' cubres tu sueldo y tus gastos, pero el negocio solo gana '+Math.round((net-cu)/p0*100)+'% en lugar de '+mPct+'%. Te faltan '+fmt.format(price-p0)+' por '+w.u1+' para tener fondo de emergencia y para crecer.');
+      }else h+=ins('','Tu precio actual cubre todo','Con '+fmt.format(p0)+' pagas insumos, gastos, tu sueldo y el negocio gana '+Math.round((net-cu)/p0*100)+'%.');
+    }
+    // Competencia
+    if(comp>0){
+      if(price>comp*1.15){
+        h+=ins('warn','Tu precio sugerido está '+Math.round((price/comp-1)*100)+'% arriba de la competencia','No lo resuelvas bajando tu margen ni tu sueldo. Tus opciones: llenar tu capacidad'+(cap>0?' (con tu agenda llena el precio bajaría a '+fmt.format(priceFull)+')':'')+', reducir insumos o gastos que no te traen clientas, o comunicar mejor lo que te hace distinta para que tu clienta vea por qué cuesta más.');
+      }else if(price<comp*0.85){
+        h+=ins('','Tienes espacio para cobrar más','La competencia cobra alrededor de '+fmt.format(comp)+'. Puedes acercarte a ese precio sin salir del mercado y fortalecer tu negocio.');
+      }else h+=ins('','Tu precio está en línea con el mercado','La competencia cobra cerca de '+fmt.format(comp)+'. Tu diferencia tiene que estar en el servicio y la experiencia.');
+    }
+    // Equilibrio
+    if(isFinite(be)){
+      if(be>q) h+=ins('bad','Con este precio no llegas al punto de equilibrio','Necesitas '+nfmt.format(be)+' '+w.u2+' al mes para cubrir tu sueldo y tus gastos, y hoy vendes '+nfmt.format(q)+'.');
+      else{const s=(q-be)/q;h+=ins(s<0.2?'warn':'','Necesitas '+nfmt.format(be)+' '+w.u2+' al mes para no perder','Esa cifra ya incluye tu sueldo. Hoy vendes '+nfmt.format(q)+': tu colchón es de '+Math.round(s*100)+'%'+(s<0.2?' y un mes flojo te deja en números rojos.':'.'));}
+    }
+    // Capacidad
+    if(cap>0){
+      if(q>cap) h+=ins('bad','Vendes más de lo que cabe en tu tiempo','Con tus horas y '+nfmt.format(minutes)+' minutos por '+w.u1+' solo caben '+nfmt.format(cap)+' al mes. Revisa si estás trabajando más horas de las que anotaste o si el tiempo por '+w.u1+' es menor.');
+      else if(util<0.75) h+=ins('warn','Tienes '+Math.round((1-util)*100)+'% de tu tiempo productivo libre','Cada '+w.u1+' extra reparte tu sueldo y tus gastos entre más clientas. Con '+nfmt.format(cap)+' al mes tu costo bajaría de '+fmt.format(cu)+' a '+fmt.format(cuFull)+'. Antes de invertir, llena tu agenda.');
+      else if(util>=0.9) h+=ins('','Tu agenda está casi llena','Ocupas '+Math.round(util*100)+'% de tu tiempo. Crecer en volumen te obliga a contratar o ampliar; tu mejor palanca ahora es el precio.');
+    }
+    // Blancos
+    const blanks=[];S.fixed.forEach(g=>g.items.forEach(i=>{if(i.n&&String(i.a).trim()==='')blanks.push(i.n.replace(/ \(.*\)/,'').toLowerCase());}));
+    if(blanks.length) h+=ins('warn','Revisa lo que dejaste en blanco','No anotaste: '+blanks.join(', ')+'. Si de verdad no los pagas, perfecto. Si alguno sí lo pagas, aunque sea de vez en cuando, anótalo: lo que no está en tu costo lo pagas tú.');
+    if(!S.equip.some(r=>perMonth(r)>0)) h+=ins('warn','No anotaste el desgaste de tu equipo','Cuando tu equipo se descomponga tendrás que reponerlo. Si no lo cobras poco a poco en cada '+w.u1+', ese dinero no va a estar.');
+
+    $('insights').innerHTML=h;
+  }
+
+  document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.add;
+    if(k==='supplies'){S.supplies.push({n:'',p:'',r:''});renderSupplies();$('supRows').lastElementChild.querySelector('input').focus();}
+    else{S.equip.push({n:'',p:'',m:''});renderEquip();$('eqRows').lastElementChild.querySelector('input').focus();}
+    calc();
+  }));
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{S.mode=b.dataset.mode;applyWords();calc();}));
+  $('example').addEventListener('click',()=>{S=clone(EXAMPLES[S.mode]);renderAll();});
+  $('reset').addEventListener('click',()=>{S=blankState(S.mode);renderAll();});
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
